@@ -1,0 +1,116 @@
+.App {
+  text-align: center;
+  background-color: #F3F4F6FF;
+  min-height: 100vh;
+}
+
+.Main_container{
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+.container {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 60vw;
+  height: 60vh;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 32px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.Login_email{
+  margin: 5px;
+  background: #F3F4F6FF;
+  border-radius: 4px;
+  height: 4vh;
+  width: 16vw;
+}
+
+.Login_pwd{
+  margin: 5px;
+  background: #F3F4F6FF;
+  border-radius: 4px;
+  height: 4vh;
+  width: 16vw;
+}
+
+.button {
+  margin: 10px;
+  padding: 0 16px; 
+  display: flex;
+  height: 4vh;
+  width: 16vw;
+  font-size: 16px; 
+  font-weight: 400; 
+  color: #FFFFFFFF;
+  background: #00BBAAFF;
+  border-radius: 4px;
+  align-items: center;
+  justify-content: center;
+  align-items: center;
+}
+
+.signup_btn{
+  text-align: right;
+}
+.signup-form-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 40px;
+}
+
+.signup-form-left, .signup-form-right {
+  flex: 1;
+}
+
+.signup-form-left {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.signup-form-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: flex-end;
+}
+
+
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-logo {
+  margin-right: 16px;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+.link{
+  text-decoration-line: none;
+  text-decoration-color: black;
+}
+.link:visited{
+  color: black;
+}.link:hover{
+  color: green;
+}
+
+
