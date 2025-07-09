@@ -20,12 +20,12 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // Spring Security CORS 설정 추가!
+    // Spring Security CORS 설정 추가
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // 람다 스타일
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll()
                 );
@@ -36,7 +36,15 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // React 서버 주소
+        configuration.addAllowedOriginPattern("*"); // 모든 origin 허용 (개발 중에만!)
+        /*
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:3000",    // React 서버 주소
+                "http://175.118.115.201"    // android 요청 주소
+
+        ));
+         */
+
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

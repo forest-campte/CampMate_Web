@@ -11,6 +11,8 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
+//요청 처리 + 응답 반환
+//RequestDTO를 받아서 Service 호출 → ResponseDTO로 응답
 public class AuthController {
 
     private final AdminService adminService;
