@@ -7,6 +7,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CustomerLoginRequestDTO {
-    private String email;
+    private String customerId;
     private String password;
 }

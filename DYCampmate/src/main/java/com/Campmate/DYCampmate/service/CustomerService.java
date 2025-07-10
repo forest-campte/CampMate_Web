@@ -1,11 +1,14 @@
 package com.Campmate.DYCampmate.service;
 
+import com.Campmate.DYCampmate.JwtUtil;
+import com.Campmate.DYCampmate.dto.CustomerLoginRequestDTO;
 import com.Campmate.DYCampmate.dto.CustomerLoginResponseDTO;
 import com.Campmate.DYCampmate.entity.CustomerEntity;
 import com.Campmate.DYCampmate.dto.CustomerRequestDTO;
 import com.Campmate.DYCampmate.dto.CustomerResponseDTO;
 import com.Campmate.DYCampmate.repository.CustomerRepo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,24 +20,43 @@ import java.time.LocalDateTime;
 //Entity <-> DTO 변환도 여기서 주로 처리
 public class CustomerService {
     private final CustomerRepo customerRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+
 
     //회원가입
-    public Integer registerCustomer(CustomerRequestDTO dto) {
+    public Long registerCustomer(CustomerRequestDTO dto) {
         if (customerRepository.existsByCustomerId(dto.getCustomerId())) {
             throw new IllegalArgumentException("이미 존재하는 고객 ID입니다.");
         }
 
         CustomerEntity customer = CustomerEntity.builder()
                 .customerId(dto.getCustomerId())
-                .password(dto.getPassword())
+                .password(passwordEncoder.encode(dto.getPassword())) // 암호화
                 .email(dto.getEmail())
                 .nickname(dto.getNickname())
-                //Table 수정 필요
 //                .campingType(dto.getCampingType())
                 .createdDate(LocalDateTime.now())
                 .build();
 
         return customerRepository.save(customer).getId();
+    }
+
+    //로그인
+    public CustomerLoginResponseDTO login(CustomerLoginRequestDTO dto) {
+        CustomerEntity customer = customerRepository.findByCustomerId(dto.getCustomerId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 고객 ID입니다."));
+
+        if (!passwordEncoder.matches(dto.getPassword(), customer.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        String token = jwtUtil.generateToken(customer.getCustomerId());
+
+        return CustomerLoginResponseDTO.builder()
+                .userName(customer.getNickname() != null ? customer.getNickname() : customer.getCustomerId())
+                .accessToken(token)
+                .build();
     }
 
     public CustomerResponseDTO getCustomerById(Integer id) {
@@ -51,23 +73,6 @@ public class CustomerService {
                 .build();
     }
 
-    public CustomerLoginResponseDTO loginByEmail(CustomerLoginResponseDTO dto) {
-        CustomerEntity customer = customerRepository.findByEmail(dto.getUserName())
-                .orElseThrow(() -> new IllegalArgumentException("이름 없음"));
 
-//        if (!passwordEncoder.matches(dto.getPassword(), customer.getPassword())) {
-//            throw new IllegalArgumentException("비밀번호 불일치");
-//        }
-        if (dto.getPassword(), customer.getPassword()) {
-            throw new IllegalArgumentException("비밀번호 불일치");
-        }
-
-        String token = jwtUtil.generateToken(customer.getCustomerId());
-
-        return LoginResponseDTO.builder()
-                .userName(customer.getNickname() != null ? customer.getNickname() : customer.getCustomerId())
-                .accessToken(token)
-                .build();
-    }
 
 }

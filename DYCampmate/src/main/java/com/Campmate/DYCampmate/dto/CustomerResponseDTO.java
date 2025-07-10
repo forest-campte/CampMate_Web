@@ -9,7 +9,7 @@ import lombok.*;
 //Data Transfer Object
 // Controller <-> Service 간 전달용 객체
 public class CustomerResponseDTO {
-    private Integer id;
+    private Long id;
     private String customerId;
     private String email;
     private String nickname;
