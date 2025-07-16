@@ -4,12 +4,13 @@ package com.Campmate.DYCampmate.jwt;
 import com.Campmate.DYCampmate.JwtUtil;
 import com.Campmate.DYCampmate.entity.CustomerEntity;
 import com.Campmate.DYCampmate.repository.CustomerRepo;
-import io.jsonwebtoken.io.IOException;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor

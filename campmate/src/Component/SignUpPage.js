@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { useNavigate,  Link  } from "react-router-dom";
 
 function SignUpPage() {
+    const [email, setEmail] = useState("");
   const [campName, setCampName] = useState("");
   const [password, setPassword] = useState("");
   const [campDesc, setCampDesc] = useState("");
-  const [parking, setParking] = useState("");
   const [style, setStyle] = useState("");
   const [background, setBackground] = useState("");
   const [mate, setMate] = useState("");
@@ -24,19 +24,19 @@ function SignUpPage() {
       return;
     }
 
-    // 서버로 보낼 데이터
-    const newAdmin = {
-      name: campName,
-      password: password,
-      description: campDesc,
-      parking: parking,
-      campingStyle: style,
-      campingBackground: background,
-      campingType: mate
-    };
+
+      const newAdmin = {
+          email: email,
+          password: password,
+          name: campName,
+          description: campDesc,
+          campingStyle: style,
+          campingBackground: background,
+          campingType: mate
+      };
 
     try {
-      const res = await fetch("http://localhost:8080/api/signup", {
+      const res = await fetch("http://localhost:8080/api/admins/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newAdmin)
