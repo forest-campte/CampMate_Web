@@ -36,13 +36,13 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CustomerResponseDTO> getCustomer(@PathVariable Integer id) {
+    public ResponseEntity<CustomerResponseDTO> getCustomer(@PathVariable Long id) {
         return ResponseEntity.ok(customerService.getCustomerById(id));
     }
 
     @GetMapping("/me")
     public ResponseEntity<?> getMyInfo(HttpServletRequest request) {
-        CustomerEntity customer = (CustomerEntity) request.getAttribute("customerId"); // "customers_Id??
+        CustomerEntity customer = (CustomerEntity) request.getAttribute("customerId"); // customers_Id??
 
         if (customer == null) {
             return ResponseEntity.status(401).body("토큰이 유효하지 않거나 만료되었습니다.");
@@ -53,10 +53,13 @@ public class CustomerController {
                 .customerId(customer.getCustomerId())
                 .email(customer.getEmail())
                 .nickname(customer.getNickname())
-//                .campingType(customer.getCampingType())
+                .customersStyle(customer.getCustomersStyle())
+                .customersBackground(customer.getCustomersBackground())
+                .customersType(customer.getCustomersType())
                 .build();
 
         return ResponseEntity.ok(dto);
     }
+
 
 }

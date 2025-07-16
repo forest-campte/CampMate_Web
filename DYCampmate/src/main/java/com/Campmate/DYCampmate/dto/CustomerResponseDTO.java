@@ -13,5 +13,9 @@ public class CustomerResponseDTO {
     private String customerId;
     private String email;
     private String nickname;
-    private String campingType;
+    private String customersStyle;
+    private String customersBackground;
+    private String customersType;
+
+
 }

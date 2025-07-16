@@ -31,9 +31,17 @@ public class CustomerEntity {
     @Column(name = "customers_nickname", length = 100)
     private String nickname;
 
-// Table 수정 필요
-//    @Column(name = "camping_type", nullable = false, length = 100)
-//    private String campingType;
+    //캠핑 스타일
+    @Column(name = "customers_style", length = 100)
+    private String customersStyle;
+
+    //캠핑 배경
+    @Column(name = "customers_background", nullable = false, length = 100)
+    private String customersBackground;
+
+    //캠핑 동행자
+    @Column(name = "customers_type", nullable = false, length = 100)
+    private String customersType;
 
     @Column(name = "create_dt")
     private LocalDateTime createdDate;

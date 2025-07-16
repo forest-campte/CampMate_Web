@@ -14,7 +14,8 @@ public class CustomerRequestDTO {
     private String password;
     private String email;
     private String nickname;
-    // DB 테이블 수정 필요
-//    private String campingType;
+    private String customersStyle;
+    private String customersBackground;
+    private String customersType;
 
 }

@@ -35,7 +35,9 @@ public class CustomerService {
                 .password(passwordEncoder.encode(dto.getPassword())) // 암호화
                 .email(dto.getEmail())
                 .nickname(dto.getNickname())
-//                .campingType(dto.getCampingType())
+                .customersStyle(dto.getCustomersStyle())
+                .customersBackground(dto.getCustomersBackground())
+                .customersType(dto.getCustomersType())
                 .createdDate(LocalDateTime.now())
                 .build();
 
@@ -59,7 +61,7 @@ public class CustomerService {
                 .build();
     }
 
-    public CustomerResponseDTO getCustomerById(Integer id) {
+    public CustomerResponseDTO getCustomerById(Long id) {
         CustomerEntity customer = customerRepository.findByCustomerId(String.valueOf(id))
                 .orElseThrow(() -> new IllegalArgumentException("해당 고객을 찾을 수 없습니다."));
 
@@ -68,8 +70,9 @@ public class CustomerService {
                 .customerId(customer.getCustomerId())
                 .email(customer.getEmail())
                 .nickname(customer.getNickname())
-                //Table 수정 필요
-//                .campingType(customer.getCampingType())
+                .customersStyle(customer.getCustomersStyle())
+                .customersBackground(customer.getCustomersBackground())
+                .customersType(customer.getCustomersType())
                 .build();
     }
 
