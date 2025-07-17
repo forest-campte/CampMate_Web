@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useNavigate,  Link  } from "react-router-dom";
 
 function SignUpPage() {
-  const [email, setEmail] = useState("");
   const [campName, setCampName] = useState("");
+  const [campEmail, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [campDesc, setCampDesc] = useState("");
   const [style, setStyle] = useState("");
@@ -26,9 +26,9 @@ function SignUpPage() {
     // 서버로 보낼 데이터
     const newAdmin = {
       name: campName,
+      email: campEmail,
       password: password,
       description: campDesc,
-      parking: parking,
       campingStyle: style,
       campingBackground: background,
       campingType: mate
