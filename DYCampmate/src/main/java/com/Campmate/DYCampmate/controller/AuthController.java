@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/admin")
+//요청 처리 + 응답 반환
+//RequestDTO를 받아서 Service 호출 → ResponseDTO로 응답
 public class AuthController {
 
     private final AdminService adminService;
@@ -32,4 +34,8 @@ public class AuthController {
                     .body(Map.of("message", "이메일 또는 비밀번호가 올바르지 않습니다."));
         }
     }
+
+
+
+
 }
