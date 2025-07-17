@@ -1,9 +1,6 @@
 package com.Campmate.DYCampmate.controller;
 
-import com.Campmate.DYCampmate.dto.CustomerLoginRequestDTO;
-import com.Campmate.DYCampmate.dto.CustomerLoginResponseDTO;
-import com.Campmate.DYCampmate.dto.CustomerRequestDTO;
-import com.Campmate.DYCampmate.dto.CustomerResponseDTO;
+import com.Campmate.DYCampmate.dto.*;
 import com.Campmate.DYCampmate.entity.CustomerEntity;
 import com.Campmate.DYCampmate.service.CustomerService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,17 +9,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/customers")
+@RequestMapping("/customer")
 @RequiredArgsConstructor
 //요청 처리 + 응답 반환
 //RequestDTO를 받아서 Service 호출 → ResponseDTO로 응답
 public class CustomerController {
     private final CustomerService customerService;
 
-    @PostMapping("/register")
-    public ResponseEntity<Long> registerCustomer(@RequestBody CustomerRequestDTO dto) {
+    @PostMapping("/signup")
+    public ResponseEntity<CustomerSimpleResponseDTO> registerCustomer(@RequestBody CustomerRequestDTO dto) {
         Long id = customerService.registerCustomer(dto);
-        return ResponseEntity.ok(id);
+        return ResponseEntity.ok(new CustomerSimpleResponseDTO(true,"회원가입 성공"));
     }
 
     @PostMapping("/login")

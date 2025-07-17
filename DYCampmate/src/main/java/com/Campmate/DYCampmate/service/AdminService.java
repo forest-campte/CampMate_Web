@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class AdminService {
@@ -22,6 +24,7 @@ public class AdminService {
             throw new IllegalArgumentException("이미 등록된 이메일입니다.");
         }
 
+        System.out.println(dto.getCreateDt());
         AdminEntity admin = AdminEntity.builder()
                 .email(dto.getEmail())
                 .password(passwordEncoder.encode(dto.getPassword()))
@@ -30,6 +33,7 @@ public class AdminService {
                 .campingStyle(dto.getCampingStyle())
                 .campingBackground(dto.getCampingBackground())
                 .campingType(dto.getCampingType())
+                .createDt(LocalDateTime.now())
                 .build();
 
         adminRepository.save(admin); // 실제 DB 저장

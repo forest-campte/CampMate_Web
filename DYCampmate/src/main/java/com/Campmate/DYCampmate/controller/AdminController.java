@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/api/admins")
 @RequiredArgsConstructor
 //@CrossOrigin(origins = "http://localhost:3000") // React 개발 서버 포트에 맞게 설정
 public class AdminController {

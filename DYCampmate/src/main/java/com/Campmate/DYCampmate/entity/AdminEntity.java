@@ -46,7 +46,7 @@ public class AdminEntity {
     private String campingType;
 
     @Column(name = "create_dt")
-    private LocalDateTime create_dt;
+    private LocalDateTime createDt;
 
 
 
