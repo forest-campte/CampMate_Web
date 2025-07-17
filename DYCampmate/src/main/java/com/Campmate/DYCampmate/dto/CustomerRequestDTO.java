@@ -2,6 +2,8 @@ package com.Campmate.DYCampmate.dto;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,5 +19,6 @@ public class CustomerRequestDTO {
     private String customersStyle;
     private String customersBackground;
     private String customersType;
+    private LocalDateTime createDt;
 
 }
