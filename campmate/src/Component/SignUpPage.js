@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useNavigate,  Link  } from "react-router-dom";
 
 function SignUpPage() {
-    const [email, setEmail] = useState("");
   const [campName, setCampName] = useState("");
+  const [campEmail, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [campDesc, setCampDesc] = useState("");
   const [style, setStyle] = useState("");
@@ -18,22 +18,21 @@ function SignUpPage() {
     setError("");
     setSuccess("");
 
-    // 입력값 유효성 검사 (필요시 추가)
-    if (!campName || !password || !campDesc || !parking || !style || !background || !mate) {
+    if (!campName || !campEmail || !password || !campDesc || !style || !background || !mate) {
       setError("모든 항목을 입력하세요.");
       return;
     }
 
-
-      const newAdmin = {
-          email: email,
-          password: password,
-          name: campName,
-          description: campDesc,
-          campingStyle: style,
-          campingBackground: background,
-          campingType: mate
-      };
+    // 서버로 보낼 데이터
+    const newAdmin = {
+      name: campName,
+      email: campEmail,
+      password: password,
+      description: campDesc,
+      campingStyle: style,
+      campingBackground: background,
+      campingType: mate
+    };
 
     try {
       const res = await fetch("http://localhost:8080/api/admins/signup", {
@@ -67,6 +66,12 @@ function SignUpPage() {
                     onChange={e => setCampName(e.target.value)}
                     required
                 />
+                <input style={{display: "flex"}} placeholder="이메일 입력"
+                    type="text"
+                    value={campEmail}
+                    onChange={e => setEmail(e.target.value)}
+                    required
+                />
                 <input placeholder="비밀번호 입력"
                     type="password"
                     value={password}
@@ -77,13 +82,7 @@ function SignUpPage() {
                 <textarea style={{ resize: "none", width: "300px", height: "100px" }} value={campDesc} onChange={e => setCampDesc(e.target.value)} required/>
             </div>
             <div className="signup-form-right">
-                <div>
-                <select style={{ width: "140px" }} value={parking} onChange={e => setParking(e.target.value)} required>
-                    <option value="">주차 가능 여부</option>
-                    <option value="가능">가능</option>
-                    <option value="불가능">불가능</option>
-                </select>
-                </div>
+                
                 <div>
                 <select style={{ width: "140px" }} value={style} onChange={e => setStyle(e.target.value)} required>
                     <option value="">캠핑 스타일</option>
