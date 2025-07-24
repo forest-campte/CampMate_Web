@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate , Link} from "react-router-dom";
 
-function LoginPage({ setUser }) {
+function LoginPage({ setUser , setReservations, setZones }) {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -26,8 +26,15 @@ function LoginPage({ setUser }) {
         throw new Error(errData.message || "로그인 실패");
       }
 
-      const adminData = await res.json(); 
-      setUser(adminData); 
+
+      const data = await res.json(); 
+
+      setUser(data.user);
+      setReservations(data.reservations || []);
+      setZones(data.zones || [])
+
+      console.log("예약 데이터 개수:", (data.reservations || []).length);
+
       navigate("/reservation");
     } catch (err) {
       setError(err.message);

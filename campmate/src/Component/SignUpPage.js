@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useNavigate,  Link  } from "react-router-dom";
 
 function SignUpPage() {
-  const [campName, setCampName] = useState("");
   const [campEmail, setEmail] = useState("");
+  const [campName, setCampName] = useState("");
   const [password, setPassword] = useState("");
   const [campDesc, setCampDesc] = useState("");
   const [style, setStyle] = useState("");
@@ -25,8 +25,8 @@ function SignUpPage() {
 
     // 서버로 보낼 데이터
     const newAdmin = {
-      name: campName,
       email: campEmail,
+      name: campName,      
       password: password,
       description: campDesc,
       campingStyle: style,
@@ -53,7 +53,7 @@ function SignUpPage() {
   };
   return (
     <div>
-      <form className="container">
+      <form className="container" onSubmit={handleSubmit}>
         <Link to="/Login">
             <button style={{position: "absolute", left: 0, top: 0}} type="button">로그인 페이지 이동</button>
         </Link>
