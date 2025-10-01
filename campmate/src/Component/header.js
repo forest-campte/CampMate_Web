@@ -15,6 +15,8 @@ function header({user}) {
                     <Link to="/reservation" className='link'>예약 관리</Link>
                     {" | "}
                     <Link to="/campingzone" className='link'>캠핑존 관리</Link>
+                    {" | "}
+                    <Link to="/admin" className='link'>계정</Link>
                 </nav>
             </div>
         </header>

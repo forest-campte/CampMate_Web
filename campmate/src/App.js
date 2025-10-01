@@ -2,6 +2,7 @@ import './App.css';
 import ReservationPage from './Component/ReservationPage';
 import CampingZonePage from './Component/CampingZonePage';
 import LoginPage from './Component/LoginPage';
+import AdminsPage from './Component/AdminPage';
 import Header from './Component/header';
 import SignUpPage  from './Component/SignUpPage';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
@@ -18,6 +19,7 @@ function AppLayout({ user, setUser, reservations, setReservations, zones, setZon
         <Routes>
           <Route path="/" element={<Navigate to="/Login" replace />} />
           <Route path="/Login" element={<LoginPage setUser={setUser} setReservations={setReservations} setZones={setZones} />} />
+          <Route path="/admin" element={<AdminsPage user={user} setUser={setUser} />} />
           <Route path="/campingzone" element={<CampingZonePage user={user} zones={zones}/>} />
           <Route path="/reservation" element={<ReservationPage user={user} reservations={reservations}/>} />
           <Route path="/signup" element={<SignUpPage />} />
