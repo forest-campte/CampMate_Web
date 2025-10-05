@@ -42,8 +42,9 @@ public class AuthController {
 
     @PostMapping("/admins/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO request) {
-
         AdminEntity admin = authService.authenticate(request);
+
+        String token = jwtUtil.createToken(String.valueOf(admin.getId()),admin.getEmail());
 
         AdminResponseDTO user = new AdminResponseDTO(admin);
         List<ReservationDTO> reservations = reservationService.getReservation(admin);
@@ -53,6 +54,7 @@ public class AuthController {
         response.put("user", user);
         response.put("reservations", reservations);
         response.put("zones", zones);
+        response.put("token", token);
 
         return ResponseEntity.ok(response);
     }

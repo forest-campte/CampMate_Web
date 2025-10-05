@@ -42,15 +42,26 @@ function SignUpPage() {
       });
 
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.message || "회원가입 실패");
+        // 서버에서 에러 응답이 JSON이 아닐 수도 있으므로 먼저 text로 받음
+        const errorText = await res.text();
+        try {
+          const errData = JSON.parse(errorText);
+          throw new Error(errData.message || "회원가입 실패");
+        } catch (parseError) {
+          throw new Error(errorText || "회원가입 실패");
+        }
       }
-      setSuccess("회원가입이 완료되었습니다!");
-      navigate("/Login");
+      setSuccess("회원가입이 완료되었습니다! 잠시 후 로그인 페이지로 이동합니다.");
+      
+      setTimeout(() => {
+        navigate("/Login");
+      }, 2000); // 2초 후 로그인 페이지로 이동
+
     } catch (err) {
       setError(err.message);
     }
   };
+
   return (
     <div>
       <form className="container" onSubmit={handleSubmit}>
@@ -67,7 +78,7 @@ function SignUpPage() {
                     required
                 />
                 <input style={{display: "flex"}} placeholder="이메일 입력"
-                    type="text"
+                    type="email" // 이메일 형식을 사용
                     value={campEmail}
                     onChange={e => setEmail(e.target.value)}
                     required

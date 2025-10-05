@@ -2,70 +2,70 @@ import React, { useState, useEffect } from "react";
 
 function AdminsPage({ user, setUser }) {
     const [editMode, setEditMode] = useState(false);
-    const [editedUser, setEditedUser] = useState({ ...user });
-    // 에러 메시지를 관리할 상태 변수
+    // user prop이 초기에 null일 수 있으므로, 빈 객체로 기본값을 설정하여 오류를 방지합니다.
+    const [editedUser, setEditedUser] = useState({ ...user } || {});
     const [error, setError] = useState(null);
 
-    // user prop이 변경될 때 editedUser 상태를 동기화합니다.
-    // 부모 컴포넌트에서 user 데이터가 비동기적으로 로드될 때 필요합니다.
+    // 부모 컴포넌트에서 user 데이터가 비동기적으로 로드될 때를 대비하여
+    // user prop이 변경될 때마다 수정 중인 사용자 정보(editedUser)를 동기화합니다.
     useEffect(() => {
         setEditedUser({ ...user });
     }, [user]);
 
+    // API 요청 시 자동으로 토큰을 헤더에 추가하는 헬퍼 함수
+    const fetchWithAuth = (url, options = {}) => {
+        const token = localStorage.getItem('authToken');
+        const headers = {
+            'Content-Type': 'application/json',
+            ...options.headers,
+        };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        return fetch(url, { ...options, headers });
+    };
+
+    // input 필드 값이 변경될 때마다 editedUser 상태를 업데이트하는 함수
     const handleChange = (e) => {
         const { name, value } = e.target;
         setEditedUser(prev => ({ ...prev, [name]: value }));
     };
 
-    // '저장' 버튼 클릭 시 실행될 함수
+    // '저장' 버튼 클릭 시 서버에 수정된 정보를 전송하는 함수
     const handleSave = async () => {
         setError(null); // 이전 에러 메시지 초기화
         try {
-            // 현재 로그인된 관리자 정보를 수정하는 API 엔드포인트로 PUT 요청
-            // (실제 엔드포인트는 백엔드 설계에 따라 달라질 수 있습니다)
-            const response = await fetch(`/api/admins/me`, {
+            // ⚠️ 중요: 백엔드에 현재 로그인한 사용자의 정보를 수정하는 API 엔드포인트가 필요합니다.
+            // 여기서는 '/api/admins/me'로 가정하고 PUT 요청을 보냅니다.
+            const response = await fetchWithAuth(`/api/admins/me`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // TODO: 로그인 기능 구현 후 실제 JWT 토큰 등을 여기에 추가해야 합니다.
-                    // 'Authorization': `Bearer ${your_auth_token}`
-                },
-                body: JSON.stringify(editedUser) // 수정한 사용자 정보를 JSON으로 전송
+                body: JSON.stringify(editedUser)
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || '정보 저장에 실패했습니다.');
             }
-
-            // 서버로부터 완전히 저장된 최신 사용자 정보를 다시 받아옵니다.
             const updatedUser = await response.json();
-
-            // 부모 컴포넌트의 상태를 서버에서 받은 최신 정보로 업데이트합니다.
-            setUser(updatedUser);
-
-            // 수정 모드를 종료합니다.
-            setEditMode(false);
-
+            setUser(updatedUser); // App의 전체 user 상태를 최신 정보로 업데이트
+            setEditMode(false); // 수정 모드 종료
         } catch (err) {
-            console.error("관리자 정보 저장 실패:", err);
-            setError(err.message); // 에러 상태에 메시지 저장
+            setError(err.message);
         }
     };
 
-    // '취소' 버튼 클릭 시 실행될 함수
     const handleCancel = () => {
-        setEditedUser({ ...user }); // 원본 user 데이터로 복구
+        setEditedUser({ ...user }); // 수정을 취소하고 원래 정보로 되돌림
         setEditMode(false);
-        setError(null); // 에러 메시지 초기화
+        setError(null);
     };
 
-    // '수정' 버튼 클릭 시 실행될 함수
     const handleEditClick = () => {
         setEditMode(true);
-        setError(null); // 에러 메시지 초기화
+        setError(null);
     };
 
+    // user 데이터가 아직 로드되지 않았으면 로딩 메시지를 표시
     if (!user) return <div>로딩 중...</div>;
 
     return (

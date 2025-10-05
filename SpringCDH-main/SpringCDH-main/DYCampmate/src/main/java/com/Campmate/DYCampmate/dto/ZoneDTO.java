@@ -12,11 +12,11 @@ public class ZoneDTO {
     private String name;
     private String description;
     private Integer capacity;
-    private Integer price;
+    private Integer pricePerNight;
     private String type;
     private String defaultSize;
     private String floor;
-    private String parking;
+    private Boolean parking;
     private Boolean isActive;
 
     public ZoneDTO(ZoneEntity entity) {
@@ -24,7 +24,7 @@ public class ZoneDTO {
         this.name = entity.getName();
         this.description = entity.getDescription();
         this.capacity = entity.getCapacity();
-        this.price = entity.getPrice();
+        this.pricePerNight = entity.getPricePerNight();
         this.type = entity.getType();
         this.defaultSize = entity.getDefaultSize();
         this.floor = entity.getFloor();

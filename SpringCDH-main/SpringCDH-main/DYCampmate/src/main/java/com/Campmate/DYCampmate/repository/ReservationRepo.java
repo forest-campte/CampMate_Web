@@ -9,13 +9,13 @@ import java.util.List;
 
 @Repository
 public interface ReservationRepo extends JpaRepository<ReservationEntity, Long> {
-
+    List<ReservationEntity> findAllByCampingZone_Admin(AdminEntity admin);
     //해당 admin의 모든 status
     List<ReservationEntity> findByCampingZone_Admin(AdminEntity admin);
 
     //해당 admin의 특정 1개 status
     List<ReservationEntity> findByCampingZone_AdminAndStatus(AdminEntity admin, ReservationEntity.ReservationStatus status);
-    
+
     List<ReservationEntity> findByCampingZone_AdminAndStatusIn(AdminEntity admin, List<ReservationEntity.ReservationStatus> statuses);
     /*여러 상태 지정 가능 R C E
     reservationRepo.findByCampingZone_AdminAndStatusIn(
