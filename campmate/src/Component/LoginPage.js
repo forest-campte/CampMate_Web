@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { fetchWithAuth } from '../api'; // api.js에서 import
+import { fetchWithAuth } from '../api';
 
 function LoginPage({ setUser }) {
     const [email, setEmail] = useState("");
