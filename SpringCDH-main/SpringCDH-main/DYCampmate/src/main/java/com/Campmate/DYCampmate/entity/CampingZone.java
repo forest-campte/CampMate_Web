@@ -1,5 +1,3 @@
-// src/main/java/com/Campmate/DYCampmate/entity/CampingZone.java
-
 package com.Campmate.DYCampmate.entity;
 
 import jakarta.persistence.*;
@@ -63,6 +61,7 @@ public class CampingZone extends BaseTimeEntity {
         this.isActive = isActive;
     }
 
+    // 수정을 위한 메서드
     public void update(String name, String description, Integer capacity, Integer price, String type, String defaultSize, String floor, boolean parking, boolean isActive) {
         this.name = name;
         this.description = description;
