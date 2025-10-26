@@ -27,7 +27,7 @@ public class CustomerService {
         if (customerRepository.existsByCustomerId(dto.getCustomerId())) {
             throw new IllegalArgumentException("이미 존재하는 아이디 입니다.");
         }
-
+        //Campmate Default 입력
         String provider = dto.getProvider() == null ? "NORMAL" : dto.getProvider();
 
         CustomerEntity customer = CustomerEntity.builder()
@@ -47,29 +47,27 @@ public class CustomerService {
 
     //CustomerController
     public CustomerLoginResponseDTO login(CustomerLoginRequestDTO dto) {
-        CustomerEntity customer = customerRepository.findByCustomerId(dto.getCustomerEmail())
+        CustomerEntity customer = customerRepository.findByCustomerId(dto.getCustomerId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디 입니다."));
 
-//        if (!passwordEncoder.matches(dto.getCustomerPass(), customer.getPassword())) {
-//            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
-//        }
-        if (!dto.getCustomerPass().equals(customer.getPassword())) {
+        if (!passwordEncoder.matches(dto.getCustomerPassword(), customer.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
         String token = jwtUtil.generateToken(customer.getCustomerId());
 
+
         return CustomerLoginResponseDTO.builder()
-//                .userName(customer.getNickname() != null ? customer.getNickname() : customer.getCustomerId())
+                .id(customer.getId())
+                .userName(customer.getNickname())
                 .token(token)
                 .build();
     }
 
     //CustomerController
     public CustomerResponseDTO getCustomerById(Long id) {
-        CustomerEntity customer = customerRepository.findByCustomerId(String.valueOf(id))
+        CustomerEntity customer = customerRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 고객을 찾을 수 없습니다."));
-
         return CustomerResponseDTO.builder()
                 .id(customer.getId())
                 .customerId(customer.getCustomerId())
@@ -83,12 +81,11 @@ public class CustomerService {
 
     public CustomerFindIdResponseDTO findCustomerId(String email, String nickname) {
         Optional<CustomerEntity> customerOpt = customerRepository.findByEmailAndNickname(email, nickname);
-
         return customerOpt.
                 map(customer -> new CustomerFindIdResponseDTO
-                    (true, customer.getCustomerId(), "성공"))
+                        (true, customer.getCustomerId(), "성공"))
                 .orElseGet(() -> new CustomerFindIdResponseDTO
-                    (false, null, "회원 정보 없음"));
+                        (false, null, "회원 정보 없음"));
     }
 
 

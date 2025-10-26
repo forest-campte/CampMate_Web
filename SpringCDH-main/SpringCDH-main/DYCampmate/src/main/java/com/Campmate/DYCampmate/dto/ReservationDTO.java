@@ -20,6 +20,7 @@ public class ReservationDTO {
     private LocalDate checkOut;
     private String status;
     private LocalDateTime createDt;
+
     private String zoneName;
 
     // 엔티티를 DTO로 변환하는 정적 팩토리 메서드

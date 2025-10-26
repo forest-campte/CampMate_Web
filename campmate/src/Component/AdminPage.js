@@ -1,28 +1,58 @@
 import React, { useState, useEffect } from "react";
-import { fetchWithAuth } from '../api'; // [수정] api.js에서 fetchWithAuth import
+import { fetchWithAuth } from '../api';
 
 function AdminsPage({ user, setUser }) {
     const [editMode, setEditMode] = useState(false);
     const [editedUser, setEditedUser] = useState({ ...user } || {});
+    const [imageFile, setImageFile] = useState(null); // 이미지 파일 상태 추가
     const [error, setError] = useState(null);
 
     useEffect(() => {
         setEditedUser({ ...user });
-    }, [user]);
+        setImageFile(null); // 수정 모드 시작 시 또는 user 변경 시 파일 상태 초기화
+    }, [user, editMode]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setEditedUser(prev => ({ ...prev, [name]: value }));
     };
 
+    // 파일 선택 핸들러
+    const handleFileChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            setImageFile(e.target.files[0]);
+        }
+    };
+
     const handleSave = async () => {
         setError(null);
+
+        // FormData 객체 생성
+        const formData = new FormData();
+        // editedUser 객체의 모든 키-값 쌍을 FormData에 추가
+        // 주의: user 객체 전체를 넣으면 안되고 필요한 필드만 넣어야 함
+        formData.append('email', editedUser.email);
+        formData.append('name', editedUser.name);
+        formData.append('description', editedUser.description);
+        formData.append('campingStyle', editedUser.campingStyle);
+        formData.append('campingBackground', editedUser.campingBackground);
+        formData.append('campingType', editedUser.campingType);
+        formData.append('address', editedUser.address);
+        // imageUrl은 보내지 않음 (파일로 대체)
+
+        // 새 이미지 파일이 선택되었으면 추가
+        if (imageFile) {
+            formData.append('imageFile', imageFile);
+        }
+
         try {
+            // fetchWithAuth를 사용하여 FormData 전송
             const updatedUser = await fetchWithAuth(`/api/admins/me`, {
                 method: 'PUT',
-                body: JSON.stringify(editedUser)
+                // FormData 전송 시 Content-Type 헤더는 설정하지 않음!
+                body: formData
             });
-            setUser(updatedUser);
+            setUser(updatedUser); // 서버로부터 받은 최종 데이터로 업데이트
             setEditMode(false);
         } catch (err) {
             setError(err.message);
@@ -33,6 +63,7 @@ function AdminsPage({ user, setUser }) {
         setEditedUser({ ...user });
         setEditMode(false);
         setError(null);
+        setImageFile(null);
     };
 
     const handleEditClick = () => {
@@ -67,6 +98,31 @@ function AdminsPage({ user, setUser }) {
                             )}
                         </td>
                     </tr>
+                    {/* --- 주소 행 추가 --- */}
+                    <tr>
+                        <th>캠핑장 주소</th>
+                        <td>
+                            {editMode ? (
+                                <input name="address" value={editedUser.address || ''} onChange={handleChange} />
+                            ) : (
+                                user.address
+                            )}
+                        </td>
+                    </tr>
+                    {/* -------------------- */}
+                    {/* --- 이미지 파일 행 추가 --- */}
+                    <tr>
+                        <th>대표 이미지</th>
+                        <td>
+                            {editMode ? (
+                                <input name="imageFile" type="file" accept="image/*" onChange={handleFileChange} />
+                            ) : (
+                                // 이미지 URL이 있으면 이미지 표시, 없으면 '없음'
+                                user.imageUrl ? <img src={user.imageUrl} alt="대표 이미지" width="100" /> : '없음'
+                            )}
+                        </td>
+                    </tr>
+                    {/* ----------------------- */}
                     <tr>
                         <th>캠핑장 설명</th>
                         <td>
@@ -127,7 +183,7 @@ function AdminsPage({ user, setUser }) {
                     </tr>
                     <tr>
                         <th>계정 생성일</th>
-                        <td>{user.createDt}</td>
+                        <td>{user.createDt ? new Date(user.createDt).toLocaleString() : ''}</td>
                     </tr>
                 </tbody>
             </table>

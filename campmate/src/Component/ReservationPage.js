@@ -19,7 +19,7 @@ function ReservationPage({ user }) {
             setLoading(true);
             setError("");
             try {
-                const url = `/api/reservations/admin/${user.id}'/status?status=${filterStatus}`;
+                const url = `/api/reservations/admin/${user.id}/status?status=${filterStatus}`;
                 const data = await fetchWithAuth(url);
                 setReservations(data);
             } catch (err) {

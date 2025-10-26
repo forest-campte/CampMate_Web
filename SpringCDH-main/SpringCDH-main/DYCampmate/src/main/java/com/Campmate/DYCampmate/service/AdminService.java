@@ -1,13 +1,16 @@
 package com.Campmate.DYCampmate.service;
 
 import com.Campmate.DYCampmate.dto.AdminDTO;
+import com.Campmate.DYCampmate.dto.AdminUpdateRequestDto;
 import com.Campmate.DYCampmate.entity.AdminEntity;
 import com.Campmate.DYCampmate.entity.CustomerEntity;
 import com.Campmate.DYCampmate.repository.AdminRepo;
 import com.Campmate.DYCampmate.repository.CustomerRepo;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.AbstractMap;
@@ -18,36 +21,54 @@ import java.util.List;
 public class AdminService {
     private final AdminRepo adminRepository;
     private final PasswordEncoder passwordEncoder;
-//    public AdminService(AdminRepo adminRepo) { this.adminRepo = adminRepo;}
     private final CustomerRepo customerRepo;
 
-    //AutoConroller
     public AdminEntity findByEmail(String email) {
         return adminRepository.findByEmail(email).orElse(null);
     }
 
-    //AdminController
+    // 회원가입
     public void register(AdminDTO dto) {
         if (adminRepository.existsByEmail(dto.getEmail())) {
             throw new IllegalArgumentException("이미 등록된 이메일입니다.");
         }
 
-        System.out.println(dto.getCreateDt());
         AdminEntity admin = AdminEntity.builder()
                 .email(dto.getEmail())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .name(dto.getName())
-                .description(dto.getDescription())
+                .description(dto.getDescription()) // 회원가입 시 description 받도록 유지
                 .campingStyle(dto.getCampingStyle())
                 .campingBackground(dto.getCampingBackground())
                 .campingType(dto.getCampingType())
+                .address(dto.getAddress())
+                .imageUrl(dto.getImageUrl())
                 .createDt(LocalDateTime.now())
                 .build();
 
-        adminRepository.save(admin); // 실제 DB 저장
+        adminRepository.save(admin);
     }
 
-    //맞춤형 캠핑장 리스트 검색
+    // 관리자 정보 수정
+    @Transactional
+    public AdminEntity updateAdmin(Long adminId, AdminUpdateRequestDto updateDto) {
+        AdminEntity admin = adminRepository.findById(adminId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 관리자를 찾을 수 없습니다: " + adminId));
+
+        admin.update(
+                updateDto.email(),
+                updateDto.name(),
+                updateDto.description(),
+                updateDto.campingStyle(),
+                updateDto.campingBackground(),
+                updateDto.campingType(),
+                updateDto.address(),
+                updateDto.imageUrl()
+        );
+        return admin;
+    }
+
+    // 맞춤형 캠핑장 리스트 검색 (변경 없음)
     public List<AdminDTO> recommendAdmins(Long customerId) {
         CustomerEntity customer = customerRepo.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 고객이 없습니다"));
@@ -62,21 +83,16 @@ public class AdminService {
         return admins.stream()
                 .map(admin -> {
                     int score = 0;
-                    if (admin.getCampingStyle().contains(style)) score++;
-                    if (admin.getCampingBackground().contains(background)) score++;
-                    if (admin.getCampingType().contains(type)) score++;
+                    if (admin.getCampingStyle() != null && admin.getCampingStyle().contains(style)) score++;
+                    if (admin.getCampingBackground() != null && admin.getCampingBackground().contains(background)) score++;
+                    if (admin.getCampingType() != null && admin.getCampingType().contains(type)) score++;
 
                     return new AbstractMap.SimpleEntry<>(admin, score);
                 })
-                .filter(entry -> entry.getValue() > 0) // 최소 1개 이상 일치한 것만
-                .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue())) // 점수 높은 순 정렬
-                .limit(5) // 상위 5개만
+                .filter(entry -> entry.getValue() > 0)
+                .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
+                .limit(5)
                 .map(entry -> AdminDTO.fromEntity(entry.getKey()))
                 .toList();
     }
-
-
-
-
-
 }

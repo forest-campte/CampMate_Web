@@ -11,33 +11,28 @@ function CampingZoneModal({ zone, onSave, onCancel }) {
         defaultSize: '',
         floor: '파쇄석',
         parking: false,
-        isActive: true
+        isActive: true,
+        imageUrl: '' // 기존 imageUrl 필드 유지 (표시용)
     });
+    const [imageFile, setImageFile] = useState(null); // 이미지 파일 상태 추가
 
     useEffect(() => {
         if (zone) {
             setFormData({
                 ...zone,
-                // DB에서 0/1로 온 값을 true/false로 변환하여 체크박스에 반영
                 parking: zone.parking === 1 || zone.parking === true,
                 isActive: zone.isActive === 1 || zone.isActive === true,
+                imageUrl: zone.imageUrl || ''
             });
         } else {
-            // 추가 모드일 때 폼 데이터 초기화
             setFormData({
-                name: '',
-                description: '',
-                capacity: 2,
-                price: 0,
-                type: '오토캠핑',
-                defaultSize: '',
-                floor: '파쇄석',
-                parking: false,
-                isActive: true
+                name: '', description: '', capacity: 2, price: 0, type: '오토캠핑',
+                defaultSize: '', floor: '파쇄석', parking: false, isActive: true, imageUrl: ''
             });
         }
+        setImageFile(null); // 모달 열릴 때 파일 상태 초기화
     }, [zone]);
-    
+
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         const processedValue = name === 'capacity' || name === 'price' ? parseInt(value, 10) : value;
@@ -47,15 +42,24 @@ function CampingZoneModal({ zone, onSave, onCancel }) {
         }));
     };
 
+    // 파일 선택 핸들러
+    const handleFileChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            setImageFile(e.target.files[0]);
+        }
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        // 저장 시점에 true/false를 0/1로 변환하여 전달
+        // 저장 시점에 boolean 값을 0/1로 변환하고, 파일도 함께 전달
         const dataToSend = {
             ...formData,
             parking: formData.parking ? 1 : 0,
             isActive: formData.isActive ? 1 : 0,
         };
-        onSave(dataToSend);
+        // imageUrl은 FormData에 파일과 함께 보내므로 여기서 제거해도 됨 (선택)
+        delete dataToSend.imageUrl;
+        onSave(dataToSend, imageFile); // 파일 객체도 전달
     };
 
     return (
@@ -65,9 +69,14 @@ function CampingZoneModal({ zone, onSave, onCancel }) {
                 <form onSubmit={handleSubmit}>
                     <label htmlFor="name-input">캠핑존 이름</label>
                     <input id="name-input" name="name" value={formData.name} onChange={handleChange} placeholder="캠핑존 이름" required />
-                    
+
                     <label htmlFor="desc-input">캠핑존 설명</label>
                     <textarea id="desc-input" name="description" value={formData.description} onChange={handleChange} placeholder="캠핑존 설명" />
+
+                    {/* --- 이미지 파일 선택 필드 추가 --- */}
+                    <label htmlFor="imageFile-input">캠핑존 이미지 파일</label>
+                    <input id="imageFile-input" name="imageFile" type="file" accept="image/*" onChange={handleFileChange} />
+                    {/* ------------------------------ */}
 
                     <label htmlFor="capacity-input">수용 인원</label>
                     <input id="capacity-input" name="capacity" type="number" value={formData.capacity} onChange={handleChange} placeholder="수용 인원" required />
@@ -125,8 +134,7 @@ function CampingZonePage({ user }) {
             if (!user) return;
             setLoading(true);
             try {
-                // TODO: 백엔드에 현재 로그인한 관리자의 캠핑존만 가져오는 API 구현 필요
-                const data = await fetchWithAuth('/api/zones'); 
+                const data = await fetchWithAuth('/api/zones');
                 setZones(data);
             } catch (err) {
                 setError(err.message);
@@ -149,21 +157,37 @@ function CampingZonePage({ user }) {
         setError("");
     };
 
-    const handleSave = async (zoneData) => {
+    // handleSave 함수 시그니처 변경 (imageFile 파라미터 추가)
+    const handleSave = async (zoneData, imageFile) => {
         setError("");
         const url = editingZone ? `/api/zones/${editingZone.id}` : '/api/zones';
         const method = editingZone ? 'PUT' : 'POST';
-        
-        const payload = editingZone 
-            ? zoneData 
-            : { ...zoneData, adminId: user.id };
-        
+
+        // FormData 객체 생성
+        const formData = new FormData();
+        // zoneData 객체의 모든 키-값 쌍을 FormData에 추가
+        Object.keys(zoneData).forEach(key => {
+            if (zoneData[key] !== null) {
+                 formData.append(key, zoneData[key]);
+            }
+        });
+        // 새 이미지 파일이 선택되었으면 추가
+        if (imageFile) {
+            formData.append('imageFile', imageFile);
+        }
+        // 추가 모드일 때는 adminId를 백엔드에서 처리하므로 여기서 보내지 않음
+        // if (!editingZone && user && user.id) {
+        //     formData.append('adminId', user.id); // 제거
+        // }
+
         try {
             const savedZone = await fetchWithAuth(url, {
                 method: method,
-                body: JSON.stringify(payload)
+                // FormData 전송 시 Content-Type 헤더는 설정하지 않음!
+                body: formData
             });
-            
+
+            // 상태 업데이트
             if (editingZone) {
                 setZones(zones.map(z => z.id === savedZone.id ? savedZone : z));
             } else {
@@ -193,6 +217,8 @@ function CampingZonePage({ user }) {
                     <tr>
                         <th>ID</th>
                         <th>이름</th>
+                        {/* 📝 이미지 컬럼 추가 */}
+                        <th>이미지</th>
                         <th>가격</th>
                         <th>수용인원</th>
                         <th>상태</th>
@@ -202,16 +228,19 @@ function CampingZonePage({ user }) {
                 <tbody>
                     {zones.length === 0 ? (
                         <tr>
-                            <td colSpan="6" align="center">등록된 캠핑존이 없습니다.</td>
+                            {/* 📝 colSpan 7로 변경 */}
+                            <td colSpan="7" align="center">등록된 캠핑존이 없습니다.</td>
                         </tr>
                     ) : (
                         zones.map(zone => (
                             <tr key={zone.id}>
                                 <td>{zone.id}</td>
                                 <td>{zone.name}</td>
-                                <td>{zone.price ? zone.price.toLocaleString() : 0} 원</td>
+                                {/* 📝 이미지 표시 */}
+                                <td>{zone.imageUrl ? <img src={zone.imageUrl} alt={zone.name} width="50" /> : '없음'}</td>
+                                <td>{zone.price != null ? zone.price.toLocaleString() : 0} 원</td>
                                 <td>{zone.capacity} 명</td>
-                                <td>{zone.isActive ? '예약 가능' : '예약 불가'}</td>
+                                <td>{zone.isActive === true || zone.isActive === 1 ? '예약 가능' : '예약 불가'}</td>
                                 <td>
                                     <button onClick={() => handleEditClick(zone)}>수정</button>
                                 </td>
