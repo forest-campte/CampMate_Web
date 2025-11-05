@@ -4,12 +4,12 @@ import { fetchWithAuth } from '../api';
 function AdminsPage({ user, setUser }) {
     const [editMode, setEditMode] = useState(false);
     const [editedUser, setEditedUser] = useState({ ...user } || {});
-    const [imageFile, setImageFile] = useState(null); // 이미지 파일 상태 추가
+    const [imageFile, setImageFile] = useState(null);
     const [error, setError] = useState(null);
 
     useEffect(() => {
         setEditedUser({ ...user });
-        setImageFile(null); // 수정 모드 시작 시 또는 user 변경 시 파일 상태 초기화
+        setImageFile(null); 
     }, [user, editMode]);
 
     const handleChange = (e) => {
@@ -17,7 +17,6 @@ function AdminsPage({ user, setUser }) {
         setEditedUser(prev => ({ ...prev, [name]: value }));
     };
 
-    // 파일 선택 핸들러
     const handleFileChange = (e) => {
         if (e.target.files && e.target.files[0]) {
             setImageFile(e.target.files[0]);
@@ -26,33 +25,26 @@ function AdminsPage({ user, setUser }) {
 
     const handleSave = async () => {
         setError(null);
-
-        // FormData 객체 생성
         const formData = new FormData();
-        // editedUser 객체의 모든 키-값 쌍을 FormData에 추가
-        // 주의: user 객체 전체를 넣으면 안되고 필요한 필드만 넣어야 함
-        formData.append('email', editedUser.email);
-        formData.append('name', editedUser.name);
-        formData.append('description', editedUser.description);
-        formData.append('campingStyle', editedUser.campingStyle);
-        formData.append('campingBackground', editedUser.campingBackground);
-        formData.append('campingType', editedUser.campingType);
-        formData.append('address', editedUser.address);
-        // imageUrl은 보내지 않음 (파일로 대체)
+        
+        formData.append('email', editedUser.email || '');
+        formData.append('name', editedUser.name || '');
+        formData.append('description', editedUser.description || '');
+        formData.append('campingStyle', editedUser.campingStyle || '');
+        formData.append('campingBackground', editedUser.campingBackground || '');
+        formData.append('campingType', editedUser.campingType || '');
+        formData.append('address', editedUser.address || '');
 
-        // 새 이미지 파일이 선택되었으면 추가
         if (imageFile) {
             formData.append('imageFile', imageFile);
         }
 
         try {
-            // fetchWithAuth를 사용하여 FormData 전송
             const updatedUser = await fetchWithAuth(`/api/admins/me`, {
                 method: 'PUT',
-                // FormData 전송 시 Content-Type 헤더는 설정하지 않음!
                 body: formData
             });
-            setUser(updatedUser); // 서버로부터 받은 최종 데이터로 업데이트
+            setUser(updatedUser); 
             setEditMode(false);
         } catch (err) {
             setError(err.message);
@@ -74,15 +66,15 @@ function AdminsPage({ user, setUser }) {
     if (!user) return <div>로딩 중...</div>;
 
     return (
-        <div style={{ padding: "20px" }}>
+        <div className="admin-page">
             <h2>관리자 정보</h2>
-            <table border="1" cellPadding="8" style={{ margin: "auto", minWidth: "700px" }}>
+            <table className="data-table">
                 <tbody>
                     <tr>
                         <th>이메일</th>
                         <td>
                             {editMode ? (
-                                <input name="email" value={editedUser.email || ''} onChange={handleChange} />
+                                <input name="email" className="form-input" value={editedUser.email || ''} onChange={handleChange} />
                             ) : (
                                 user.email
                             )}
@@ -92,42 +84,46 @@ function AdminsPage({ user, setUser }) {
                         <th>이름</th>
                         <td>
                             {editMode ? (
-                                <input name="name" value={editedUser.name || ''} onChange={handleChange} />
+                                <input name="name" className="form-input" value={editedUser.name || ''} onChange={handleChange} />
                             ) : (
                                 user.name
                             )}
                         </td>
                     </tr>
-                    {/* --- 주소 행 추가 --- */}
                     <tr>
                         <th>캠핑장 주소</th>
                         <td>
                             {editMode ? (
-                                <input name="address" value={editedUser.address || ''} onChange={handleChange} />
+                                <input name="address" className="form-input" value={editedUser.address || ''} onChange={handleChange} />
                             ) : (
                                 user.address
                             )}
                         </td>
                     </tr>
-                    {/* -------------------- */}
-                    {/* --- 이미지 파일 행 추가 --- */}
                     <tr>
                         <th>대표 이미지</th>
                         <td>
                             {editMode ? (
-                                <input name="imageFile" type="file" accept="image/*" onChange={handleFileChange} />
+                                <div>
+                                    <input name="imageFile" type="file" className="form-input" accept="image/*" onChange={handleFileChange} />
+                                    <small style={{ display: 'block', marginTop: '5px' }}>
+                                        현재 이미지: {user.imageUrl ? <a href={user.imageUrl} target="_blank" rel="noopener noreferrer">보기</a> : '없음'}
+                                    </small>
+                                </div>
                             ) : (
-                                // 이미지 URL이 있으면 이미지 표시, 없으면 '없음'
-                                user.imageUrl ? <img src={user.imageUrl} alt="대표 이미지" width="100" /> : '없음'
+                                user.imageUrl ? (
+                                    <img src={user.imageUrl} alt="대표 이미지" />
+                                ) : (
+                                    '없음'
+                                )
                             )}
                         </td>
                     </tr>
-                    {/* ----------------------- */}
                     <tr>
                         <th>캠핑장 설명</th>
                         <td>
                             {editMode ? (
-                                <input name="description" value={editedUser.description || ''} onChange={handleChange} />
+                                <input name="description" className="form-input" value={editedUser.description || ''} onChange={handleChange} />
                             ) : (
                                 user.description
                             )}
@@ -137,7 +133,7 @@ function AdminsPage({ user, setUser }) {
                         <th>선호 캠핑 스타일</th>
                         <td>
                             {editMode ? (
-                                <select name="campingStyle" value={editedUser.campingStyle || ''} onChange={handleChange}>
+                                <select name="campingStyle" className="form-select" value={editedUser.campingStyle || ''} onChange={handleChange}>
                                     <option value="">선택</option>
                                     <option value="오토캠핑">오토캠핑</option>
                                     <option value="백패킹">백패킹</option>
@@ -153,7 +149,7 @@ function AdminsPage({ user, setUser }) {
                         <th>선호 캠핑 배경</th>
                         <td>
                             {editMode ? (
-                                <select name="campingBackground" value={editedUser.campingBackground || ''} onChange={handleChange}>
+                                <select name="campingBackground" className="form-select" value={editedUser.campingBackground || ''} onChange={handleChange}>
                                     <option value="">선택</option>
                                     <option value="산">산속</option>
                                     <option value="바다">바다</option>
@@ -168,7 +164,7 @@ function AdminsPage({ user, setUser }) {
                         <th>추천 동행자</th>
                         <td>
                             {editMode ? (
-                                <select name="campingType" value={editedUser.campingType || ''} onChange={handleChange}>
+                                <select name="campingType" className="form-select" value={editedUser.campingType || ''} onChange={handleChange}>
                                     <option value="">선택</option>
                                     <option value="가족">가족</option>
                                     <option value="연인">연인</option>
@@ -191,13 +187,16 @@ function AdminsPage({ user, setUser }) {
             <div style={{ marginTop: "16px", textAlign: "center" }}>
                 {editMode ? (
                     <>
-                        <button onClick={handleSave}>저장</button>
-                        <button onClick={handleCancel} style={{ marginLeft: "10px" }}>취소</button>
+                        <button onClick={handleSave} className="button button--primary">저장</button>
+                        <button onClick={handleCancel} className="button button--secondary" style={{ marginLeft: "10px" }}>취소</button>
                     </>
                 ) : (
-                    <button onClick={handleEditClick}>수정</button>
+                    <button onClick={handleEditClick} 
+                    style={{ marginLeft: '5px', backgroundColor: '#D1D8BE' }} 
+                    className="button">수정
+                    </button>
                 )}
-                {error && <p style={{ color: 'red', marginTop: '10px' }}>에러: {error}</p>}
+                {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
             </div>
         </div>
     );

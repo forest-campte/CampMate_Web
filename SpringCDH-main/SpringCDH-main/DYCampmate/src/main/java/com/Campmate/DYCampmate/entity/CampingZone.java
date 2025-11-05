@@ -1,14 +1,15 @@
 package com.Campmate.DYCampmate.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Setter
+@NoArgsConstructor//(access = AccessLevel.PROTECTED)
 @Table(name = "camping_zones")
 public class CampingZone extends BaseTimeEntity {
 
@@ -26,7 +27,6 @@ public class CampingZone extends BaseTimeEntity {
     @Column(name = "description", length = 255)
     private String description;
 
-    // 📝 [추가] 이미지 URL 필드
     @Column(name = "image_url", length = 255)
     private String imageUrl;
 
@@ -51,8 +51,12 @@ public class CampingZone extends BaseTimeEntity {
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
 
+    @OneToMany(mappedBy = "campingZone")
+    private List<ReviewEntity> reviews = new ArrayList<>();
+
     @Builder
-    public CampingZone(AdminEntity admin, String name, String description, Integer capacity, Integer price, String type, String defaultSize, String floor, boolean parking, boolean isActive, String imageUrl) { // 생성자에 imageUrl 추가
+    public CampingZone(Long id, AdminEntity admin, String name, String description, Integer capacity, Integer price, String type, String defaultSize, String floor, boolean parking, boolean isActive, String imageUrl) {
+        this.id = id;
         this.admin = admin;
         this.name = name;
         this.description = description;
@@ -63,19 +67,26 @@ public class CampingZone extends BaseTimeEntity {
         this.floor = floor;
         this.parking = parking;
         this.isActive = isActive;
-        this.imageUrl = imageUrl; // 📝 imageUrl 초기화
+        this.imageUrl = imageUrl;
     }
 
-    public void update(String name, String description, Integer capacity, Integer price, String type, String defaultSize, String floor, boolean parking, boolean isActive, String imageUrl) { // update 메서드에 imageUrl 추가
+    /**
+     * ✅ [핵심] 서비스 레이어에서 호출할 엔티티 수정 메서드
+     * (기존 서비스 코드의 updateCampingZone 로직과 일치시킴)
+     */
+    public void update(String name, String description, int capacity, int price, String type, String defaultSize, String floor, boolean parking, boolean isActive, String imageUrl) {
         if (name != null) this.name = name;
         if (description != null) this.description = description;
-        if (capacity != null) this.capacity = capacity;
-        if (price != null) this.price = price;
+        this.capacity = capacity;
+        this.price = price;
         if (type != null) this.type = type;
         if (defaultSize != null) this.defaultSize = defaultSize;
         if (floor != null) this.floor = floor;
         this.parking = parking;
         this.isActive = isActive;
-        if (imageUrl != null) this.imageUrl = imageUrl;
+
+        // imageUrl이 null로 전달되면 기존 값을 유지하지 않고 null로 덮어쓰지 않도록 방어
+        // (파일이 없는 경우 updateCampingZone에서 기존 URL을 전달해줘야 함)
+        this.imageUrl = imageUrl;
     }
 }

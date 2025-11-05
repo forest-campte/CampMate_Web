@@ -11,6 +11,7 @@ import com.Campmate.DYCampmate.service.CampingZoneService;
 import com.Campmate.DYCampmate.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +24,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api")
+//요청 처리 + 응답 반환
+//RequestDTO를 받아서 Service 호출 → ResponseDTO로 응답
 public class AuthController {
 
     private final AdminService adminService;
@@ -30,23 +33,22 @@ public class AuthController {
     private final ReservationService reservationService;
     private final CustomerRepo customerRepository;
     private final JwtUtil jwtUtil;
-    private final CampingZoneService campingZoneService; // 오타 수정
-    private final PasswordEncoder passwordEncoder; // Bean으로 주입받음
+    private final CampingZoneService campingZoneService;
+    private final PasswordEncoder passwordEncoder;
+//    public PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+
 
     @PostMapping("/admins/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO request) {
 
-        AdminEntity admin = authService.authenticate(request); // 인증 성공 시 AdminEntity 객체 반환
+        AdminEntity admin = authService.authenticate(request);
 
-        String token = jwtUtil.createToken(String.valueOf(admin.getId()), admin.getEmail());
+        String token = jwtUtil.createToken(String.valueOf(admin.getId()),admin.getEmail());
 
         AdminResponseDTO user = new AdminResponseDTO(admin);
-
-        // --- 📝 [핵심 수정] ---
-        // 서비스 메서드가 AdminEntity를 받도록 수정되었으므로, admin 객체 자체를 전달합니다.
         List<ReservationDTO> reservations = reservationService.getReservationsForAdmin(admin);
         List<CampingZoneDto> zones = campingZoneService.getZonesForAdmin(admin);
-        // -----------------------
 
         Map<String, Object> response = new HashMap<>();
         response.put("user", user);
@@ -57,16 +59,22 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+
+//    {
+//            "id": "123456789",              // 소셜 고유 ID (카카오: id, 구글: sub)
+//            "email": "user@kakao.com",      // 사용자 이메일
+//            "provider": "KAKAO"             // "KAKAO" 또는 "GOOGLE"
+//    }
     @PostMapping("/customer/social")
     public ResponseEntity<?> socialLogin(@RequestBody SocialLoginDTO dto) {
         String socialId = dto.getId();
-        String provider = dto.getProvider();
+        String provider = dto.getProvider(); // "KAKAO", "GOOGLE", "NORMAL"
 
         CustomerEntity user = customerRepository
                 .findByCustomerIdAndProvider(socialId, provider)
                 .orElse(null);
 
-        // 소셜 회원가입 시에는 주입받은 passwordEncoder 사용
+        // 소셜 회원가입 시 기본 비밀번호 부여
         String dummyPassword = passwordEncoder.encode(UUID.randomUUID().toString());
 
         if (user == null) {
@@ -84,6 +92,7 @@ public class AuthController {
             customerRepository.save(user);
         }
 
+        // (선택) JWT 발급
         String jwt = jwtUtil.createToken(user.getCustomerId(), user.getEmail());
 
         return ResponseEntity.ok(Map.of(
@@ -91,4 +100,6 @@ public class AuthController {
                 "token", jwt
         ));
     }
+
+
 }

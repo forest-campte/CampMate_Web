@@ -1,19 +1,15 @@
 package com.Campmate.DYCampmate.dto;
 
 import com.Campmate.DYCampmate.entity.AdminEntity;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Data
+@Builder
 public class AdminDTO {
-
     private String email;
     private String password;
     private String name;

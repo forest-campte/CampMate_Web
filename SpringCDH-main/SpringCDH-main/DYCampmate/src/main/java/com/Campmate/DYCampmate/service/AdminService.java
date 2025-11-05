@@ -23,21 +23,23 @@ public class AdminService {
     private final PasswordEncoder passwordEncoder;
     private final CustomerRepo customerRepo;
 
+    //AutoConroller
     public AdminEntity findByEmail(String email) {
         return adminRepository.findByEmail(email).orElse(null);
     }
 
-    // 회원가입
+    //AdminController
     public void register(AdminDTO dto) {
         if (adminRepository.existsByEmail(dto.getEmail())) {
             throw new IllegalArgumentException("이미 등록된 이메일입니다.");
         }
 
+        System.out.println(dto.getCreateDt());
         AdminEntity admin = AdminEntity.builder()
                 .email(dto.getEmail())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .name(dto.getName())
-                .description(dto.getDescription()) // 회원가입 시 description 받도록 유지
+                .description(dto.getDescription())
                 .campingStyle(dto.getCampingStyle())
                 .campingBackground(dto.getCampingBackground())
                 .campingType(dto.getCampingType())
@@ -46,7 +48,7 @@ public class AdminService {
                 .createDt(LocalDateTime.now())
                 .build();
 
-        adminRepository.save(admin);
+        adminRepository.save(admin); // 실제 DB 저장
     }
 
     // 관리자 정보 수정
@@ -68,7 +70,7 @@ public class AdminService {
         return admin;
     }
 
-    // 맞춤형 캠핑장 리스트 검색 (변경 없음)
+    //맞춤형 캠핑장 리스트 검색
     public List<AdminDTO> recommendAdmins(Long customerId) {
         CustomerEntity customer = customerRepo.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 고객이 없습니다"));
@@ -83,16 +85,21 @@ public class AdminService {
         return admins.stream()
                 .map(admin -> {
                     int score = 0;
-                    if (admin.getCampingStyle() != null && admin.getCampingStyle().contains(style)) score++;
-                    if (admin.getCampingBackground() != null && admin.getCampingBackground().contains(background)) score++;
-                    if (admin.getCampingType() != null && admin.getCampingType().contains(type)) score++;
+                    if (admin.getCampingStyle().contains(style)) score++;
+                    if (admin.getCampingBackground().contains(background)) score++;
+                    if (admin.getCampingType().contains(type)) score++;
 
                     return new AbstractMap.SimpleEntry<>(admin, score);
                 })
-                .filter(entry -> entry.getValue() > 0)
-                .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
-                .limit(5)
+                .filter(entry -> entry.getValue() > 0) // 최소 1개 이상 일치한 것만
+                .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue())) // 점수 높은 순 정렬
+                .limit(5) // 상위 5개만
                 .map(entry -> AdminDTO.fromEntity(entry.getKey()))
                 .toList();
     }
+
+
+
+
+
 }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { fetchWithAuth } from '../api';
 
+// CampingZoneModal 컴포넌트는 변경 사항이 없습니다.
 function CampingZoneModal({ zone, onSave, onCancel }) {
     const [formData, setFormData] = useState({
         name: '',
@@ -63,39 +64,39 @@ function CampingZoneModal({ zone, onSave, onCancel }) {
     };
 
     return (
-        <div className="modal-backdrop">
-            <div className="modal-content">
+        <div className="modal__backdrop">
+            <div className="modal__content">
                 <h2>{zone ? '캠핑존 수정' : '새 캠핑존 추가'}</h2>
                 <form onSubmit={handleSubmit}>
-                    <label htmlFor="name-input">캠핑존 이름</label>
-                    <input id="name-input" name="name" value={formData.name} onChange={handleChange} placeholder="캠핑존 이름" required />
+                    <label className="form-label" htmlFor="name-input">캠핑존 이름</label>
+                    <input id="name-input" name="name" className="form-input" value={formData.name} onChange={handleChange} placeholder="캠핑존 이름" required />
 
-                    <label htmlFor="desc-input">캠핑존 설명</label>
-                    <textarea id="desc-input" name="description" value={formData.description} onChange={handleChange} placeholder="캠핑존 설명" />
+                    <label className="form-label" htmlFor="desc-input">캠핑존 설명</label>
+                    <textarea id="desc-input" name="description" className="form-textarea" value={formData.description} onChange={handleChange} placeholder="캠핑존 설명" />
 
                     {/* --- 이미지 파일 선택 필드 추가 --- */}
-                    <label htmlFor="imageFile-input">캠핑존 이미지 파일</label>
-                    <input id="imageFile-input" name="imageFile" type="file" accept="image/*" onChange={handleFileChange} />
+                    <label className="form-label" htmlFor="imageFile-input">캠핑존 이미지 파일</label>
+                    <input id="imageFile-input" name="imageFile" type="file" className="form-input" accept="image/*" onChange={handleFileChange} />
                     {/* ------------------------------ */}
 
-                    <label htmlFor="capacity-input">수용 인원</label>
-                    <input id="capacity-input" name="capacity" type="number" value={formData.capacity} onChange={handleChange} placeholder="수용 인원" required />
+                    <label className="form-label" htmlFor="capacity-input">수용 인원</label>
+                    <input id="capacity-input" name="capacity" type="number" className="form-input" value={formData.capacity} onChange={handleChange} placeholder="수용 인원" required />
 
-                    <label htmlFor="price-input">가격 (1박)</label>
-                    <input id="price-input" name="price" type="number" value={formData.price} onChange={handleChange} placeholder="가격" required />
+                    <label className="form-label" htmlFor="price-input">가격 (1박)</label>
+                    <input id="price-input" name="price" type="number" className="form-input" value={formData.price} onChange={handleChange} placeholder="가격" required />
 
-                    <label htmlFor="size-input">사이트 크기</label>
-                    <input id="size-input" name="defaultSize" value={formData.defaultSize} onChange={handleChange} placeholder="예: 6x8m" required/>
+                    <label className="form-label" htmlFor="size-input">사이트 크기</label>
+                    <input id="size-input" name="defaultSize" className="form-input" value={formData.defaultSize} onChange={handleChange} placeholder="예: 6x8m" required/>
 
-                    <label htmlFor="type-select">캠핑 타입</label>
-                    <select id="type-select" name="type" value={formData.type} onChange={handleChange} required>
+                    <label className="form-label" htmlFor="type-select">캠핑 타입</label>
+                    <select id="type-select" name="type" className="form-select" value={formData.type} onChange={handleChange} required>
                         <option value="오토캠핑">오토캠핑</option>
                         <option value="글램핑">글램핑</option>
                         <option value="카라반">카라반</option>
                     </select>
 
-                    <label htmlFor="floor-select">바닥 타입</label>
-                    <select id="floor-select" name="floor" value={formData.floor} onChange={handleChange} required>
+                    <label className="form-label" htmlFor="floor-select">바닥 타입</label>
+                    <select id="floor-select" name="floor" className="form-select" value={formData.floor} onChange={handleChange} required>
                         <option value="파쇄석">파쇄석</option>
                         <option value="데크">데크</option>
                         <option value="잔디">잔디</option>
@@ -112,9 +113,9 @@ function CampingZoneModal({ zone, onSave, onCancel }) {
                         </label>
                     </div>
 
-                    <div className="modal-buttons">
-                        <button type="submit">저장</button>
-                        <button type="button" onClick={onCancel}>취소</button>
+                    <div className="modal__buttons">
+                        <button type="submit" className="button button--primary">저장</button>
+                        <button type="button" onClick={onCancel} className="button button--secondary">취소</button>
                     </div>
                 </form>
             </div>
@@ -122,6 +123,7 @@ function CampingZoneModal({ zone, onSave, onCancel }) {
     );
 }
 
+// 메인 캠핑존 관리 페이지 컴포넌트
 function CampingZonePage({ user }) {
     const [zones, setZones] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -157,37 +159,29 @@ function CampingZonePage({ user }) {
         setError("");
     };
 
-    // handleSave 함수 시그니처 변경 (imageFile 파라미터 추가)
     const handleSave = async (zoneData, imageFile) => {
         setError("");
-        const url = editingZone ? `/api/zones/${editingZone.id}` : '/api/zones';
+        const url = editingZone 
+            ? `/api/zones/${editingZone.id}/form-data` 
+            : '/api/zones/form-data';
         const method = editingZone ? 'PUT' : 'POST';
 
-        // FormData 객체 생성
         const formData = new FormData();
-        // zoneData 객체의 모든 키-값 쌍을 FormData에 추가
         Object.keys(zoneData).forEach(key => {
             if (zoneData[key] !== null) {
                  formData.append(key, zoneData[key]);
             }
         });
-        // 새 이미지 파일이 선택되었으면 추가
         if (imageFile) {
             formData.append('imageFile', imageFile);
         }
-        // 추가 모드일 때는 adminId를 백엔드에서 처리하므로 여기서 보내지 않음
-        // if (!editingZone && user && user.id) {
-        //     formData.append('adminId', user.id); // 제거
-        // }
 
         try {
             const savedZone = await fetchWithAuth(url, {
                 method: method,
-                // FormData 전송 시 Content-Type 헤더는 설정하지 않음!
                 body: formData
             });
 
-            // 상태 업데이트
             if (editingZone) {
                 setZones(zones.map(z => z.id === savedZone.id ? savedZone : z));
             } else {
@@ -200,6 +194,30 @@ function CampingZonePage({ user }) {
         }
     };
 
+    // --- 📝 [추가] 캠핑존 삭제 핸들러 ---
+    const handleDelete = async (zoneId) => {
+        // 사용자에게 삭제 의사 재확인
+        if (!window.confirm("정말로 이 캠핑존을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) {
+            return;
+        }
+
+        setError(""); // 에러 메시지 초기화
+        try {
+            // 백엔드에 DELETE API 호출 (표준 RESTful URL 사용)
+            await fetchWithAuth(`/api/zones/${zoneId}`, {
+                method: 'DELETE'
+            });
+
+            // API 호출 성공 시, 화면(state)에서도 해당 캠핑존을 즉시 제거
+            setZones(zones.filter(zone => zone.id !== zoneId));
+
+        } catch (err) {
+            // 에러 발생 시 메시지 표시
+            setError(err.message);
+        }
+    };
+    // ---------------------------------
+
     const handleCancel = () => {
         setIsModalOpen(false);
         setEditingZone(null);
@@ -209,15 +227,13 @@ function CampingZonePage({ user }) {
     if (loading) return <div>캠핑존 목록을 불러오는 중...</div>;
 
     return (
-        <div>
+        <div className="zone-page">
             <h2>캠핑존 관리</h2>
             <p>로그인된 이메일: {user ? user.email : ""}</p>
-            <table border="1" style={{ margin: "20px auto", minWidth: "800px" }}>
+            <table className="data-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>이름</th>
-                        {/* 📝 이미지 컬럼 추가 */}
                         <th>이미지</th>
                         <th>가격</th>
                         <th>수용인원</th>
@@ -228,28 +244,38 @@ function CampingZonePage({ user }) {
                 <tbody>
                     {zones.length === 0 ? (
                         <tr>
-                            {/* 📝 colSpan 7로 변경 */}
-                            <td colSpan="7" align="center">등록된 캠핑존이 없습니다.</td>
+                            <td colSpan="6" align="center">등록된 캠핑존이 없습니다.</td>
                         </tr>
                     ) : (
                         zones.map(zone => (
                             <tr key={zone.id}>
-                                <td>{zone.id}</td>
                                 <td>{zone.name}</td>
-                                {/* 📝 이미지 표시 */}
-                                <td>{zone.imageUrl ? <img src={zone.imageUrl} alt={zone.name} width="50" /> : '없음'}</td>
+                                <td>{zone.imageUrl ? <img src={zone.imageUrl} alt={zone.name} style={{width: '50px', height: '50px', objectFit: 'cover'}} /> : '없음'}</td>
                                 <td>{zone.price != null ? zone.price.toLocaleString() : 0} 원</td>
                                 <td>{zone.capacity} 명</td>
                                 <td>{zone.isActive === true || zone.isActive === 1 ? '예약 가능' : '예약 불가'}</td>
                                 <td>
-                                    <button onClick={() => handleEditClick(zone)}>수정</button>
+                                    <button onClick={() => handleEditClick(zone)} 
+                                    style={{ marginLeft: '5px', backgroundColor: '#D1D8BE' }} 
+                                    className="button">수정
+                                    </button>
+                                    <button 
+                                        onClick={() => handleDelete(zone.id)} 
+                                        className="button button--secondary" 
+                                        style={{ marginLeft: '5px', backgroundColor: '#d84a53ff' }}
+                                    >
+                                        삭제
+                                    </button>
                                 </td>
                             </tr>
                         ))
                     )}
                 </tbody>
             </table>
-            <button onClick={handleAddClick}>새 캠핑존 추가</button>
+            <div className="zone-page__add-button">
+                <button onClick={handleAddClick} className="button button--primary">새 캠핑존 추가</button>
+            </div>
+            
             {isModalOpen && (
                 <CampingZoneModal
                     zone={editingZone}

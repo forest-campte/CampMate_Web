@@ -1,6 +1,8 @@
 package com.Campmate.DYCampmate.repository;
 
 import com.Campmate.DYCampmate.entity.AdminEntity;
+import com.Campmate.DYCampmate.entity.CampingZone;
+import com.Campmate.DYCampmate.entity.CustomerEntity;
 import com.Campmate.DYCampmate.entity.ReservationEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -8,9 +10,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ReservationRepo extends JpaRepository<ReservationEntity, Long> {
+
+
 
     //해당 admin의 모든 status
     List<ReservationEntity> findByCampingZone_Admin(AdminEntity admin);
@@ -66,4 +71,9 @@ public interface ReservationRepo extends JpaRepository<ReservationEntity, Long> 
      */
     @Query("SELECT r FROM ReservationEntity r JOIN FETCH r.campingZone cz WHERE cz.admin.id = :adminId AND r.status IN :statuses")
     List<ReservationEntity> findByAdminIdAndStatusInWithCampingZone(@Param("adminId") Long adminId, @Param("statuses") List<ReservationEntity.ReservationStatus> statuses);
+
+    List<ReservationEntity> findByCustomer(CustomerEntity customer);
+    List<ReservationEntity> findByAdmin(AdminEntity admin);
+    List<ReservationEntity> findByCampingZone(CampingZone zone);
+    List<ReservationEntity> findByCustomer_Id(Long customerId);
 }

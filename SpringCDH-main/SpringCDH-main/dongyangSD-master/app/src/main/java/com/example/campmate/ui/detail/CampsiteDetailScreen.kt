@@ -2,42 +2,25 @@ package com.example.campmate.ui.detail
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.ArrowBack // (참고) 중복 import지만 컴파일에 영향 없음
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect // (추가)
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,6 +41,13 @@ import com.example.campmate.R
 import com.example.campmate.data.model.Campsite
 import com.example.campmate.data.model.CampsiteSite
 import com.example.campmate.data.model.Review
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.TextButton
+import kotlinx.coroutines.flow.collectLatest // (추가)
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -68,22 +58,44 @@ fun CampsiteDetailScreen(
     onNavigateUp: () -> Unit,
     viewModel: CampsiteDetailViewModel = hiltViewModel()
 ) {
+    // --- 상태 변수 정의 ---
     val campsite by viewModel.campsite.collectAsState()
     val reviews by viewModel.reviews.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
+    val context = LocalContext.current
+
     var adultCount by remember { mutableStateOf(1) }
     var childCount by remember { mutableStateOf(0) }
-    val datePickerState = rememberDateRangePickerState()
-    var showDatePicker by remember { mutableStateOf(false) }
     var selectedSite by remember { mutableStateOf<CampsiteSite?>(null) }
-    val context = LocalContext.current
+
+    val datePickerState = rememberDateRangePickerState()
+    var showDatePickerDialog by remember { mutableStateOf(false) }
+    val dateFormatter = remember { SimpleDateFormat("yyyy.MM.dd", Locale.getDefault()) }
+
+    // (추가) 1. ViewModel의 예약 결과를 구독(observe)
+    LaunchedEffect(Unit) {
+        viewModel.reservationResult.collectLatest { success ->
+            if (success) {
+                // 2. 예약 성공 시 토스트 + 화면 이동
+                val message = context.getString(R.string.reservation_complete_message)
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                onNavigateUp()
+            } else {
+                // 3. 예약 실패 시 (네트워크 오류, 서버 500 에러 등)
+                val message = "예약에 실패했습니다. 다시 시도해주세요."
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(campsite?.name ?: stringResource(R.string.loading)) },
+            TopAppBar(title = { Text(campsite?.name ?: "상세보기") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기") // (수정) AutoMirrored로 변경
                     }
                 }
             )
@@ -93,15 +105,23 @@ fun CampsiteDetailScreen(
                 onClick = {
                     val startDate = datePickerState.selectedStartDateMillis
                     val endDate = datePickerState.selectedEndDateMillis
-                    if (startDate != null && endDate != null && selectedSite != null) {
-                        viewModel.makeReservation(adultCount, childCount, startDate, endDate, selectedSite!!.siteName)
 
-                        // ✅✅✅ [수정됨] onClick 액션 공간에서는 context.getString()을 사용합니다. ✅✅✅
-                        val message = context.getString(R.string.reservation_complete_message)
-                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                        onNavigateUp()
+                    if (startDate != null && endDate != null && selectedSite != null) {
+
+                        // (수정) 4. ViewModel 함수 호출만 실행 (토스트, onNavigateUp 모두 제거)
+                        viewModel.makeReservation(
+                            adultCount,
+                            childCount,
+                            startDate,
+                            endDate,
+                            selectedSite!!
+                        )
+
+                        // (삭제)
+                        // val message = context.getString(R.string.reservation_complete_message)
+                        // Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        // onNavigateUp()
                     } else {
-                        // ✅✅✅ [수정됨] onClick 액션 공간에서는 context.getString()을 사용합니다. ✅✅✅
                         val message = context.getString(R.string.please_select_date_and_site)
                         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                     }
@@ -115,146 +135,207 @@ fun CampsiteDetailScreen(
             }
         }
     ) { paddingValues ->
-        if (campsite == null) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else {
-            CampsiteDetailContent(
-                modifier = Modifier.padding(paddingValues),
-                campsite = campsite!!,
-                reviews = reviews,
-                adultCount = adultCount,
-                childCount = childCount,
-                onAdultChange = { adultCount = it },
-                onChildChange = { childCount = it },
-                onShowDatePicker = { showDatePicker = true },
-                selectedDateRange = datePickerState.selectedStartDateMillis to datePickerState.selectedEndDateMillis,
-                selectedSite = selectedSite,
-                onSiteSelected = { site -> selectedSite = site }
-            )
-        }
-
-        if (showDatePicker) {
-            DatePickerDialog(
-                onDismissRequest = { showDatePicker = false },
-                confirmButton = {
-                    TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.ok)) }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues) // Scaffold의 패딩 적용
+        ) {
+            when {
+                isLoading -> {
+                    // --- 로딩 중 ---
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
-            ) {
-                DateRangePicker(state = datePickerState)
+                error != null -> {
+                    // --- 에러 발생 ---
+                    Text(
+                        text = error!!,
+                        color = Color.Red,
+                        modifier = Modifier.align(Alignment.Center).padding(16.dp)
+                    )
+                }
+                campsite != null -> {
+                    // --- 성공: 데이터 표시 ---
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                    ) {
+                        // 1. 캠핑장 이미지
+                        item {
+                            Image(
+                                painter = rememberAsyncImagePainter(campsite!!.imageUrl),
+                                contentDescription = campsite!!.name,
+                                modifier = Modifier.fillMaxWidth().height(250.dp),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+
+                        // 2. 캠핑장 이름 및 설명
+                        item {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(campsite!!.name ?: "", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(campsite!!.description ?: "", style = MaterialTheme.typography.bodyLarge)
+                            }
+                        }
+
+                        item { Divider(modifier = Modifier.padding(horizontal = 16.dp)) }
+
+                        // 3. 날짜 선택
+                        item {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text("날짜 선택", style = MaterialTheme.typography.titleLarge)
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // 선택된 날짜 표시
+                                val startDateMillis = datePickerState.selectedStartDateMillis
+                                val endDateMillis = datePickerState.selectedEndDateMillis
+                                val selectedDateText = if (startDateMillis != null && endDateMillis != null) {
+                                    "${dateFormatter.format(Date(startDateMillis))} - ${dateFormatter.format(Date(endDateMillis))}"
+                                } else {
+                                    "날짜를 선택해주세요"
+                                }
+
+                                Text(text = selectedDateText, style = MaterialTheme.typography.bodyLarge)
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // 날짜 선택 다이얼로그 열기 버튼
+                                Button(onClick = { showDatePickerDialog = true }) {
+                                    Text("날짜 선택하기")
+                                }
+                            }
+                        }
+                        item { Divider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
+
+                        // 4. 인원 수 선택
+                        item {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text("인원 선택", style = MaterialTheme.typography.titleLarge)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                GuestCounter(
+                                    label = "성인",
+                                    count = adultCount,
+                                    onCountChange = { adultCount = it }
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                GuestCounter(
+                                    label = "아동",
+                                    count = childCount,
+                                    onCountChange = { childCount = it }
+                                )
+                            }
+                        }
+
+                        item { Divider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
+
+                        // 5. 사이트 선택
+                        item {
+                            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                Text("사이트 선택", style = MaterialTheme.typography.titleLarge)
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
+                        // (campsite.sites가 List<CampsiteSite>라고 가정)
+                        items(campsite!!.sites) { site ->
+                            SiteItem(
+                                site = site,
+                                isSelected = site == selectedSite,
+                                onClick = { selectedSite = site },
+                                modifier = Modifier.padding(horizontal = 16.dp) // 패딩 추가
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+
+
+                        item { Divider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
+
+                        // 6. 리뷰
+                        item {
+                            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                Text("방문자 리뷰 (${reviews.size}개)", style = MaterialTheme.typography.titleLarge)
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+                        }
+                        //  .forEach 대신 items 사용
+                        items(reviews) { review ->
+                            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                Text("${review.authorName ?: "익명"}: (평점: ${review.rating ?: "-"})")
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(review.content ?: "", style = MaterialTheme.typography.bodyMedium)
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+                        }
+
+                        // 하단 버튼 공간 확보
+                        item {
+                            Spacer(modifier = Modifier.height(20.dp))
+                        }
+                    }
+                }
             }
         }
     }
+    // DatePickerDialog 컴포저블
+    if (showDatePickerDialog) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePickerDialog = false }, // 다이얼로그 밖 클릭 시 닫기
+            confirmButton = {
+                TextButton(onClick = { showDatePickerDialog = false }) { // 확인 버튼 클릭 시 닫기
+                    Text("확인")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePickerDialog = false }) { // 취소 버튼 (선택 사항)
+                    Text("취소")
+                }
+            }
+        ) {
+            // 다이얼로그 내부에 DateRangePicker 배치
+            DateRangePicker(state = datePickerState)
+        }
+    }
+
 }
 
+
+
+
+/** 1030cdh
+ * 상세 정보 본문 UI
+ */
 @Composable
-fun CampsiteDetailContent(
-    modifier: Modifier = Modifier,
-    campsite: Campsite,
-    reviews: List<Review>,
-    adultCount: Int,
-    childCount: Int,
-    onAdultChange: (Int) -> Unit,
-    onChildChange: (Int) -> Unit,
-    onShowDatePicker: () -> Unit,
-    selectedDateRange: Pair<Long?, Long?>,
-    selectedSite: CampsiteSite?,
-    onSiteSelected: (CampsiteSite) -> Unit
+fun SiteItem(
+    site: CampsiteSite,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier // Modifier 파라미터 추가
 ) {
-    fun formatDate(millis: Long?): String {
-        if (millis == null) return "YYYY-MM-DD"
-        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        return formatter.format(Date(millis))
-    }
-
-    val dateRangeText = "${formatDate(selectedDateRange.first)} ~ ${formatDate(selectedDateRange.second)}"
-
-    Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        Image(
-            painter = rememberAsyncImagePainter(campsite.imageUrl),
-            contentDescription = campsite.name,
-            modifier = Modifier.fillMaxWidth().height(250.dp),
-            contentScale = ContentScale.Crop
+    Button(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(), // 전달받은 modifier 사용
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(campsite.name, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(8.dp))
-            Text(campsite.description, style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
-            Divider(Modifier.padding(vertical = 16.dp))
-            Text(stringResource(R.string.select_date), style = MaterialTheme.typography.titleLarge)
-            OutlinedButton(onClick = onShowDatePicker, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Default.DateRange, contentDescription = "Date Range")
-                Spacer(Modifier.width(8.dp))
-                Text(dateRangeText)
-            }
-            Spacer(Modifier.height(16.dp))
-            Text(stringResource(R.string.select_site), style = MaterialTheme.typography.titleLarge)
-            Spacer(Modifier.height(8.dp))
-            campsite.sites.forEach { site ->
-                SiteItem(
-                    site = site,
-                    isSelected = site.siteId == selectedSite?.siteId,
-                    onClick = { onSiteSelected(site) }
-                )
-            }
-            Spacer(Modifier.height(16.dp))
-            Text(stringResource(R.string.select_guests), style = MaterialTheme.typography.titleLarge)
-            Spacer(Modifier.height(8.dp))
-            GuestCounter(stringResource(R.string.adult), adultCount, onAdultChange)
-            Spacer(Modifier.height(8.dp))
-            GuestCounter(stringResource(R.string.child), childCount, onChildChange)
-
-            Divider(Modifier.padding(vertical = 16.dp))
-            Text("방문자 리뷰", style = MaterialTheme.typography.titleLarge)
-            Spacer(Modifier.height(8.dp))
-            if (reviews.isEmpty()) {
-                Text("아직 작성된 리뷰가 없습니다.")
-            } else {
-                reviews.forEach { review ->
-                    // TODO: 리뷰 카드 UI를 별도로 만들어 재사용하면 좋습니다.
-                    Text("${review.authorName}: ${review.content} (별점: ${review.rating})")
-                    Spacer(Modifier.height(8.dp))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun SiteItem(site: CampsiteSite, isSelected: Boolean, onClick: () -> Unit) {
-    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray
-
-    Row(
-        modifier = Modifier.fillMaxWidth().selectable(selected = isSelected, onClick = onClick).border(1.dp, borderColor, RoundedCornerShape(8.dp)).padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(site.siteName, fontWeight = FontWeight.Bold)
-        Text("${stringResource(R.string.nightly_price)} ${site.pricePerNight}원")
+        val siteNameText = site.name ?: "이름 없음"
+        val priceText = site.price?.let { "${it}원" } ?: "가격 정보 없음"
+        Text("$siteNameText - $priceText")
     }
-    Spacer(Modifier.height(8.dp))
 }
 
+// (GuestCounter 함수는 기존과 동일)
 @Composable
 fun GuestCounter(label: String, count: Int, onCountChange: (Int) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(label, fontSize = 18.sp)
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { if (count > 0) onCountChange(count - 1) }) {
-                Icon(Icons.Default.Remove, contentDescription = stringResource(R.string.remove))
-            }
-            Text(count.toString(), fontSize = 18.sp, modifier = Modifier.padding(horizontal = 8.dp))
-            IconButton(onClick = { onCountChange(count + 1) }) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add))
-            }
+            Button(onClick = { if (count > 0) onCountChange(count - 1) }) { Text("-") }
+            Text(count.toString(), modifier = Modifier.padding(horizontal = 16.dp), fontSize = 18.sp)
+            Button(onClick = { onCountChange(count + 1) }) { Text("+") }
         }
     }
 }

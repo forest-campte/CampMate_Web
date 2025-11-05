@@ -10,6 +10,7 @@ public class AdminResponseDTO {
     private String email;
     private String name;
     private String password;
+
     private String campingStyle;
     private String campingBackground;
     private String campingType;

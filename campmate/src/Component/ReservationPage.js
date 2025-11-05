@@ -9,6 +9,31 @@ function ReservationPage({ user }) {
     // 'R': 예약됨, 'C': 취소됨, 'E': 완료
     const [filterStatus, setFilterStatus] = useState('R'); 
 
+    // 상태 코드를 한글로 변환하기 위한 객체
+    const statusMap = {
+        'R': '예약됨',
+        'E': '이용 완료',
+        'C': '취소됨'
+    };
+
+    // --- 📝 [추가] 날짜 형식을 'YYYY-MM-DD HH:MM'으로 변환하는 함수 ---
+    const formatDateTime = (isoString) => {
+        if (!isoString) return ''; // null이나 undefined 값 처리
+        const date = new Date(isoString);
+        
+        // 숫자가 10보다 작을 때 앞에 0을 붙여주는 헬퍼 함수
+        const pad = (num) => String(num).padStart(2, '0');
+
+        const year = date.getFullYear();
+        const month = pad(date.getMonth() + 1); // getMonth()는 0부터 시작
+        const day = pad(date.getDate());
+        const hours = pad(date.getHours());
+        const minutes = pad(date.getMinutes());
+
+        return `${year}-${month}-${day} ${hours}:${minutes}`;
+    };
+    // -------------------------------------------------------------
+
     useEffect(() => {
         const fetchReservations = async () => {
             if (!user || !user.id) {
@@ -19,6 +44,7 @@ function ReservationPage({ user }) {
             setLoading(true);
             setError("");
             try {
+                // 백엔드 API가 /api/reservations/admin/{id}/status?status=... 를 지원한다고 가정
                 const url = `/api/reservations/admin/${user.id}/status?status=${filterStatus}`;
                 const data = await fetchWithAuth(url);
                 setReservations(data);
@@ -40,23 +66,22 @@ function ReservationPage({ user }) {
     if (error) return <div style={{ color: 'red' }}>에러: {error}</div>;
     
     return (
-        <div>
+        <div className="reservation-page">
             <h2>예약 관리 페이지</h2>
             <p>이곳에서 예약 현황을 확인하고 관리할 수 있습니다.</p>
 
-            <div className="filter-container">
+            <div className="reservation-page__filter">
                 <label htmlFor="status-filter">예약 상태: </label>
-                <select id="status-filter" value={filterStatus} onChange={handleFilterChange}>
+                <select id="status-filter" className="form-select" value={filterStatus} onChange={handleFilterChange}>
                     <option value="R">예약됨</option>
                     <option value="C">취소됨</option>
                     <option value="E">이용 완료</option>
                 </select>
             </div>
 
-            <table border="1" cellPadding="8" style={{ margin: "auto", minWidth: "700px" }}>
+            <table className="data-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>예약자 이름</th>
                         <th>연락처</th>
                         <th>체크인</th>
@@ -68,18 +93,17 @@ function ReservationPage({ user }) {
                 <tbody>
                     {reservations.length === 0 ? (
                         <tr>
-                            <td colSpan="7" align="center">해당 상태의 예약 데이터가 없습니다.</td>
+                            <td colSpan="6" align="center">해당 상태의 예약 데이터가 없습니다.</td>
                         </tr>
                     ) : (
                         reservations.map(reservation => (
                             <tr key={reservation.id}>
-                                <td>{reservation.id}</td>
                                 <td>{reservation.customerName}</td>
                                 <td>{reservation.customerPhone}</td>
                                 <td>{reservation.checkIn}</td>
                                 <td>{reservation.checkOut}</td>
-                                <td>{reservation.status}</td>
-                                <td>{reservation.createDt}</td>
+                                <td>{statusMap[reservation.status] || reservation.status}</td>
+                                <td>{formatDateTime(reservation.createDt)}</td>
                             </tr>
                         ))
                     )}
