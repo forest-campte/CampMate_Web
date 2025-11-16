@@ -1,3 +1,5 @@
+// /src/main/java/com/Campmate/DYCampmate/entity/AdminEntity.java
+
 package com.Campmate.DYCampmate.entity;
 
 import jakarta.persistence.*;
@@ -24,7 +26,7 @@ public class AdminEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-//  @Setter
+    //  @Setter
     @Column(nullable = false, length = 255, unique = true)
     private String email;
 
@@ -34,14 +36,17 @@ public class AdminEntity {
     @Column(nullable = false, length = 255)
     private String name;
 
-    @Column(length = 255)
+    // --- [수정] ---
+    @Column(name = "address", length = 255)
     private String address;
 
     @Column(name = "image_url", length = 255)
     private String imageUrl;
 
-    @Column(nullable = false, length = 255)
+    // --- [수정] ---
+    @Column(name = "description", length = 255) // name = "description" 추가
     private String description;
+    // ---------------
 
     @Column(nullable = false, name = "camping_style", length = 255)
     private String campingStyle;
@@ -81,7 +86,4 @@ public class AdminEntity {
         if (address != null) this.address = address;
         if (imageUrl != null) this.imageUrl = imageUrl;
     }
-
-
-
 }

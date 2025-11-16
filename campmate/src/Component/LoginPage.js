@@ -36,7 +36,7 @@ function LoginPage({ setUser }) {
             <form onSubmit={handleSubmit} className="auth-form login-form">
                 
                 <Link to="/slogin" style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <h2>CampMate<br />관리자 페이지</h2>
+                    <h2>CampMate<br />캠핑장 사장님</h2>
                 </Link>
                 
                 <input type="email" name="email" className="form-input" value={email} placeholder="이메일 입력" onChange={e => setEmail(e.target.value)} required />
